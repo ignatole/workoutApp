@@ -4,6 +4,7 @@ import dbConnect from "@/core/db/db-connect";
 import Workout from "@/features/workouts/models/workout-schema";
 import type { IWorkout } from "@/features/workouts/types";
 import { revalidatePath } from "next/cache";
+import { checkRateLimit } from "@/core/security/rate-limit";
 
 export async function getRecentWorkouts() {
     try {
@@ -24,6 +25,9 @@ export async function getRecentWorkouts() {
 
 export async function saveWorkout(workoutData: any) {
     try {
+        const rateLimit = await checkRateLimit(10); // Max 10 saves per minute
+        if (!rateLimit.success) return { success: false, error: rateLimit.error };
+
         await dbConnect();
 
         const newWorkout = new Workout(workoutData);
@@ -56,6 +60,9 @@ export async function getWorkoutById(id: string) {
 
 export async function updateWorkoutComment(id: string, comentario: string) {
     try {
+        const rateLimit = await checkRateLimit(15);
+        if (!rateLimit.success) return { success: false, error: rateLimit.error };
+
         await dbConnect();
 
         const updatedWorkout = await Workout.findByIdAndUpdate(
@@ -79,6 +86,9 @@ export async function updateWorkoutComment(id: string, comentario: string) {
 
 export async function deleteWorkout(id: string) {
     try {
+        const rateLimit = await checkRateLimit(10);
+        if (!rateLimit.success) return { success: false, error: rateLimit.error };
+
         await dbConnect();
 
         const deletedWorkout = await Workout.findByIdAndDelete(id);
