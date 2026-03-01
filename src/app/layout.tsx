@@ -13,8 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gym Tracker",
+  title: "GymTracker Nacho",
   description: "Mobile-first gym tracking application",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "GymApp",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
@@ -22,6 +28,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
