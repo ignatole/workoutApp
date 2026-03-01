@@ -1,19 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, MoreVertical, Plus, Check } from "lucide-react";
+import { ChevronLeft, Plus, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { ExerciseCard } from "@/components/workout/ExerciseCard";
+import { ExerciseCard } from "@/features/workouts/components/exercise-card";
+import type { ExerciseData } from "@/features/workouts/types";
+import { saveWorkout } from "@/features/workouts/actions/workout-actions";
+import { Input } from "@/components/ui/Input";
 
 export default function WorkoutSession() {
+    const router = useRouter();
     const [seconds, setSeconds] = useState(0);
+    const [routineName, setRoutineName] = useState("Nueva Rutina");
 
-    const [exercises, setExercises] = useState([
-        { id: 1, name: "Press de Banca" },
-        { id: 2, name: "Fondos de Tríceps" }
+    const [exercises, setExercises] = useState<ExerciseData[]>([
+        {
+            id: Date.now().toString(),
+            nombre: "Nuevo Ejercicio",
+            comentario_ejercicio: "",
+            series: [
+                { id: Date.now().toString() + "1", peso: "", reps: "", al_fallo: false, comentario: "" }
+            ]
+        }
     ]);
     const [isFinished, setIsFinished] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Simple Timer
     useEffect(() => {
@@ -34,11 +47,49 @@ export default function WorkoutSession() {
     };
 
     const handleAddExercise = () => {
-        setExercises([...exercises, { id: Date.now(), name: "Nuevo Ejercicio" }]);
+        setExercises([...exercises, {
+            id: Date.now().toString(),
+            nombre: "Nuevo Ejercicio",
+            comentario_ejercicio: "",
+            series: [{ id: Date.now().toString() + "1", peso: "", reps: "", al_fallo: false, comentario: "" }]
+        }]);
     };
 
-    const handleFinishWorkout = () => {
-        setIsFinished(true);
+    const updateExercise = (exerciseId: string, updates: Partial<ExerciseData>) => {
+        setExercises(exercises.map(ex => ex.id === exerciseId ? { ...ex, ...updates } : ex));
+    };
+
+    const handleFinishWorkout = async () => {
+        setIsSaving(true);
+
+        try {
+            const payload = {
+                nombre_rutina: routineName,
+                ejercicios: exercises.map(ex => ({
+                    nombre: ex.nombre,
+                    comentario_ejercicio: ex.comentario_ejercicio,
+                    series: ex.series.map(s => ({
+                        peso: Number(s.peso) || 0,
+                        reps: Number(s.reps) || 0,
+                        al_fallo: s.al_fallo,
+                        comentario: s.comentario
+                    }))
+                }))
+            };
+
+            const result = await saveWorkout(payload);
+
+            if (result.success) {
+                router.push('/');
+            } else {
+                alert("Error al guardar el entrenamiento. Verifica tus datos de conexión a la BD.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (isFinished) {
@@ -62,12 +113,16 @@ export default function WorkoutSession() {
         <main className="min-h-screen pb-24 max-w-md mx-auto flex flex-col pt-16">
             {/* Sticky Header */}
             <header className="fixed top-0 left-0 right-0 max-w-md mx-auto bg-zinc-950/90 backdrop-blur-md z-50 border-b border-zinc-900 px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-white">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Link href="/" className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-white">
                         <ChevronLeft className="w-6 h-6" />
                     </Link>
-                    <div>
-                        <h1 className="text-lg font-bold text-zinc-50 leading-tight">Empuje</h1>
+                    <div className="flex-1 min-w-0">
+                        <Input
+                            value={routineName}
+                            onChange={(e) => setRoutineName(e.target.value)}
+                            className="text-lg font-bold text-zinc-50 leading-tight bg-transparent border-transparent p-0 h-auto focus-visible:ring-0 focus-visible:border-none w-full truncate shadow-none border-b-transparent hover:border-b-zinc-800 rounded-none cursor-text"
+                        />
                         <div className="text-emerald-400 font-mono text-sm font-semibold tracking-wider">
                             {formatTime(seconds)}
                         </div>
@@ -80,10 +135,12 @@ export default function WorkoutSession() {
                 {exercises.map((exercise) => (
                     <ExerciseCard
                         key={exercise.id}
-                        exerciseName={exercise.name}
+                        exercise={exercise}
+                        onUpdate={(updates) => updateExercise(exercise.id, updates)}
                         onDelete={() => {
                             setExercises(exercises.filter(e => e.id !== exercise.id));
                         }}
+                        canDelete={exercises.length > 1}
                     />
                 ))}
 
@@ -103,10 +160,15 @@ export default function WorkoutSession() {
                 <Button
                     variant="giant"
                     onClick={handleFinishWorkout}
-                    className="bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20 text-white w-full h-16 text-lg font-bold gap-2"
+                    disabled={isSaving || exercises.length === 0}
+                    className="bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20 disabled:shadow-none disabled:bg-zinc-800 disabled:text-zinc-500 disabled:opacity-100 text-white w-full h-16 text-lg font-bold gap-2"
                 >
-                    <Check className="w-6 h-6" />
-                    Finalizar Entrenamiento
+                    {isSaving ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                        <Check className="w-6 h-6" />
+                    )}
+                    {isSaving ? "Guardando..." : "Finalizar Entrenamiento"}
                 </Button>
             </div>
         </main>

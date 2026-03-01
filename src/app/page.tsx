@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Dumbbell, Calendar, ChevronRight } from "lucide-react";
+import { Dumbbell, Calendar, SearchX } from "lucide-react";
+import { getRecentWorkouts } from "@/features/workouts/actions/workout-actions";
+import { WorkoutHistory } from "@/features/workouts/components/workout-history";
 
-export default function Home() {
-  const recentWorkouts = [
-    { id: 1, name: "Empuje (Pecho/Tríceps)", date: "Ayer", volume: "12,450 kg" },
-    { id: 2, name: "Tracción (Espalda/Bíceps)", date: "Hace 3 días", volume: "14,200 kg" },
-    { id: 3, name: "Pierna (Énfasis Cuádriceps)", date: "Hace 5 días", volume: "18,900 kg" },
-  ];
+export default async function Home() {
+  const recentWorkouts = await getRecentWorkouts();
 
   return (
     <main className="min-h-screen p-4 pb-20 max-w-md mx-auto flex flex-col">
@@ -28,29 +26,20 @@ export default function Home() {
 
       {/* Recent Activity */}
       <section className="flex-1">
-        <h2 className="text-lg font-semibold text-zinc-300 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-zinc-300 mb-6 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-indigo-400" />
-          Historial Reciente
+          Historial
         </h2>
 
-        <div className="space-y-3">
-          {recentWorkouts.map((workout) => (
-            <div
-              key={workout.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer hover:bg-zinc-800"
-            >
-              <div>
-                <h3 className="font-medium text-zinc-100">{workout.name}</h3>
-                <div className="flex items-center gap-3 mt-1.5 text-sm text-zinc-500">
-                  <span>{workout.date}</span>
-                  <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-                  <span>Volumen: {workout.volume}</span>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-zinc-600" />
-            </div>
-          ))}
-        </div>
+        {recentWorkouts.length === 0 ? (
+          <div className="text-center py-10 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col items-center justify-center text-zinc-500">
+            <SearchX className="w-8 h-8 mb-3 opacity-50" />
+            <p>No hay entrenamientos todavía.</p>
+            <p className="text-sm mt-1">¡Arrancá tu primera rutina!</p>
+          </div>
+        ) : (
+          <WorkoutHistory workouts={recentWorkouts} />
+        )}
       </section>
     </main>
   );

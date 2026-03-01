@@ -2,26 +2,44 @@
 
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "../ui/Button";
-import { SetRow } from "./SetRow";
-import { Input } from "../ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { SetRow } from "./set-row";
+import type { ExerciseData, SetData } from "../types";
 
 interface ExerciseCardProps {
-    exerciseName: string;
+    exercise: ExerciseData;
+    onUpdate: (updates: Partial<ExerciseData>) => void;
     onDelete?: () => void;
+    canDelete?: boolean;
 }
 
-export function ExerciseCard({ exerciseName, onDelete }: ExerciseCardProps) {
-    const [sets, setSets] = useState([Date.now()]);
-    const [generalComment, setGeneralComment] = useState("");
-    const [name, setName] = useState(exerciseName);
+export function ExerciseCard({ exercise, onUpdate, onDelete, canDelete = true }: ExerciseCardProps) {
+    const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
 
     const addSet = () => {
-        setSets((prev) => [...prev, Date.now()]);
+        onUpdate({
+            series: [
+                ...exercise.series,
+                { id: Date.now().toString(), peso: "", reps: "", al_fallo: false, comentario: "" }
+            ]
+        });
     };
 
-    const deleteSet = (setIdToRemove: number) => {
-        setSets((prev) => prev.filter(id => id !== setIdToRemove));
+    const deleteSet = (setIdToRemove: string) => {
+        onUpdate({
+            series: exercise.series.filter(s => s.id !== setIdToRemove)
+        });
+    };
+
+    const updateSet = (setId: string, updates: Partial<SetData>) => {
+        onUpdate({
+            series: exercise.series.map(s => s.id === setId ? { ...s, ...updates } : s)
+        });
+    };
+
+    const toggleComment = (setId: string) => {
+        setOpenComments(prev => ({ ...prev, [setId]: !prev[setId] }));
     };
 
     return (
@@ -30,23 +48,25 @@ export function ExerciseCard({ exerciseName, onDelete }: ExerciseCardProps) {
             <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 pr-4">
                     <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={exercise.nombre}
+                        onChange={(e) => onUpdate({ nombre: e.target.value })}
                         className="text-xl font-bold text-zinc-100 bg-transparent border-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 focus-visible:border-indigo-500 rounded-none w-full truncate border-b border-b-transparent hover:border-b-zinc-800"
                     />
                     <Input
-                        value={generalComment}
-                        onChange={(e) => setGeneralComment(e.target.value)}
+                        value={exercise.comentario_ejercicio}
+                        onChange={(e) => onUpdate({ comentario_ejercicio: e.target.value })}
                         placeholder="Comentario general (opcional)"
                         className="mt-2 h-9 text-sm bg-transparent border-transparent px-0 border-b-zinc-800 rounded-none focus-visible:ring-0 focus-visible:border-indigo-500 shadow-none hover:border-zinc-700 text-zinc-400 focus-visible:text-zinc-100"
                     />
                 </div>
-                <button
-                    onClick={onDelete}
-                    className="text-zinc-500 hover:text-red-400 p-2 shrink-0 transition-colors rounded-full hover:bg-zinc-800"
-                >
-                    <Trash2 className="w-5 h-5" />
-                </button>
+                {canDelete && (
+                    <button
+                        onClick={onDelete}
+                        className="text-zinc-500 hover:text-red-400 p-2 shrink-0 transition-colors rounded-full hover:bg-zinc-800"
+                    >
+                        <Trash2 className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
             {/* Sets Header Labels */}
@@ -60,14 +80,18 @@ export function ExerciseCard({ exerciseName, onDelete }: ExerciseCardProps) {
 
             {/* Sets List */}
             <div className="space-y-4 mb-5">
-                {sets.map((setId, index) => (
+                {exercise.series.map((set, index) => (
                     <SetRow
-                        key={setId}
+                        key={set.id}
                         setNumber={index + 1}
-                        onDelete={() => deleteSet(setId)}
+                        data={set}
+                        onUpdate={(updates) => updateSet(set.id, updates)}
+                        onDelete={exercise.series.length > 1 ? () => deleteSet(set.id) : undefined}
+                        showComment={openComments[set.id] || false}
+                        onToggleComment={() => toggleComment(set.id)}
                     />
                 ))}
-                {sets.length === 0 && (
+                {exercise.series.length === 0 && (
                     <div className="text-center py-4 text-sm text-zinc-500">
                         No hay series. Haz clic en "Añadir Serie" para comenzar.
                     </div>

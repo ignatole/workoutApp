@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { MessageCircle, Trash2 } from "lucide-react";
-import { Input } from "../ui/Input";
-import { Toggle } from "../ui/Toggle";
+import { Input } from "@/components/ui/Input";
+import { Toggle } from "@/components/ui/Toggle";
+import type { SetData } from "../types";
 
 interface SetRowProps {
     setNumber: number;
+    data: SetData;
+    onUpdate: (updates: Partial<SetData>) => void;
     onDelete?: () => void;
+    showComment: boolean;
+    onToggleComment: () => void;
 }
 
-export function SetRow({ setNumber, onDelete }: SetRowProps) {
-    const [isFailure, setIsFailure] = useState(false);
-    const [showComment, setShowComment] = useState(false);
-    const [comment, setComment] = useState("");
-
+export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onToggleComment }: SetRowProps) {
     return (
         <div className="flex flex-col gap-2 relative group">
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -26,9 +26,16 @@ export function SetRow({ setNumber, onDelete }: SetRowProps) {
                 {/* Weight */}
                 <div className="flex-1 min-w-0 relative">
                     <Input
-                        type="text"
+                        type="number"
                         inputMode="decimal"
+                        min={0}
                         placeholder="0"
+                        value={data.peso}
+                        onChange={(e) => {
+                            const val = e.target.value ? Number(e.target.value) : "";
+                            if (typeof val === 'number' && val < 0) return;
+                            onUpdate({ peso: val });
+                        }}
                         className="pr-6 text-center text-base sm:text-lg font-medium h-11"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-medium">
@@ -39,9 +46,16 @@ export function SetRow({ setNumber, onDelete }: SetRowProps) {
                 {/* Reps */}
                 <div className="flex-1 min-w-0 relative">
                     <Input
-                        type="text"
+                        type="number"
                         inputMode="numeric"
+                        min={0}
                         placeholder="0"
+                        value={data.reps}
+                        onChange={(e) => {
+                            const val = e.target.value ? Number(e.target.value) : "";
+                            if (typeof val === 'number' && val < 0) return;
+                            onUpdate({ reps: val });
+                        }}
                         className="pr-8 text-center text-base sm:text-lg font-medium h-11"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-medium">
@@ -51,15 +65,15 @@ export function SetRow({ setNumber, onDelete }: SetRowProps) {
 
                 {/* To Failure Toggle */}
                 <div className="flex items-center justify-center w-12 shrink-0">
-                    <Toggle checked={isFailure} onChange={setIsFailure} label="Al Fallo" />
+                    <Toggle checked={data.al_fallo} onChange={(val) => onUpdate({ al_fallo: val })} label="Al Fallo" />
                 </div>
 
                 {/* Actions container */}
                 <div className="flex shrink-0 gap-0.5">
                     {/* Comment Toggle */}
                     <button
-                        onClick={() => setShowComment(!showComment)}
-                        className={`w-8 h-10 flex items-center justify-center rounded-xl transition-colors ${showComment || comment ? 'bg-indigo-500/20 text-indigo-400' : 'bg-transparent text-zinc-500 hover:text-zinc-300'}`}
+                        onClick={onToggleComment}
+                        className={`w-8 h-10 flex items-center justify-center rounded-xl transition-colors ${showComment || data.comentario ? 'bg-indigo-500/20 text-indigo-400' : 'bg-transparent text-zinc-500 hover:text-zinc-300'}`}
                     >
                         <MessageCircle className="w-4 h-4" />
                     </button>
@@ -67,7 +81,11 @@ export function SetRow({ setNumber, onDelete }: SetRowProps) {
                     {/* Delete Toggle */}
                     <button
                         onClick={onDelete}
-                        className="w-8 h-10 flex items-center justify-center rounded-xl bg-transparent text-zinc-600 hover:text-red-400 transition-colors"
+                        disabled={!onDelete}
+                        className={`w-8 h-10 flex items-center justify-center rounded-xl bg-transparent transition-colors ${onDelete
+                            ? 'text-zinc-600 hover:text-red-400 opacity-100 cursor-pointer'
+                            : 'text-zinc-700 opacity-50 cursor-not-allowed'
+                            }`}
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
@@ -78,8 +96,8 @@ export function SetRow({ setNumber, onDelete }: SetRowProps) {
             {showComment && (
                 <div className="pl-8 sm:pl-10 pr-1">
                     <Input
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
+                        value={data.comentario}
+                        onChange={(e) => onUpdate({ comentario: e.target.value })}
                         placeholder="Comentario de serie..."
                         className="text-white h-9 bg-zinc-900 border-zinc-700/50 text-sm"
                     />
