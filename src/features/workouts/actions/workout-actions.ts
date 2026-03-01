@@ -53,3 +53,45 @@ export async function getWorkoutById(id: string) {
         return null;
     }
 }
+
+export async function updateWorkoutComment(id: string, comentario: string) {
+    try {
+        await dbConnect();
+
+        const updatedWorkout = await Workout.findByIdAndUpdate(
+            id,
+            { comentario },
+            { new: true }
+        );
+
+        if (!updatedWorkout) {
+            return { success: false, error: "Workout not found" };
+        }
+
+        revalidatePath("/");
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating workout comment:", error);
+        return { success: false, error: "Failed to update comment" };
+    }
+}
+
+export async function deleteWorkout(id: string) {
+    try {
+        await dbConnect();
+
+        const deletedWorkout = await Workout.findByIdAndDelete(id);
+
+        if (!deletedWorkout) {
+            return { success: false, error: "Workout not found" };
+        }
+
+        revalidatePath("/");
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting workout:", error);
+        return { success: false, error: "Failed to delete workout" };
+    }
+}

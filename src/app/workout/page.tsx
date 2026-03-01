@@ -18,7 +18,7 @@ export default function WorkoutSession() {
     const [exercises, setExercises] = useState<ExerciseData[]>([
         {
             id: Date.now().toString(),
-            nombre: "Nuevo Ejercicio",
+            nombre: "",
             comentario_ejercicio: "",
             series: [
                 { id: Date.now().toString() + "1", peso: "", reps: "", al_fallo: false, comentario: "" }
@@ -49,7 +49,7 @@ export default function WorkoutSession() {
     const handleAddExercise = () => {
         setExercises([...exercises, {
             id: Date.now().toString(),
-            nombre: "Nuevo Ejercicio",
+            nombre: "",
             comentario_ejercicio: "",
             series: [{ id: Date.now().toString() + "1", peso: "", reps: "", al_fallo: false, comentario: "" }]
         }]);
@@ -60,6 +60,12 @@ export default function WorkoutSession() {
     };
 
     const handleFinishWorkout = async () => {
+        const hasEmptyExerciseName = exercises.some(ex => !ex.nombre.trim());
+        if (hasEmptyExerciseName) {
+            alert("Por favor asegúrate de que todos los ejercicios tengan un nombre.");
+            return;
+        }
+
         setIsSaving(true);
 
         try {

@@ -32,4 +32,7 @@ export interface IWorkout {
     fecha: Date;
     nombre_rutina: string;
     ejercicios: IExercise[];
+    tipo?: "rutina" | "clase";
+    duracion_horas?: number;
+    comentario?: string;
 }

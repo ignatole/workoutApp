@@ -2,6 +2,7 @@ import { getWorkoutById } from "@/features/workouts/actions/workout-actions";
 import Link from "next/link";
 import { ChevronLeft, Calendar } from "lucide-react";
 import { notFound } from "next/navigation";
+import { DeleteWorkoutButton } from "@/features/workouts/components/delete-workout-button";
 
 export default async function WorkoutDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -35,6 +36,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                             {workout.nombre_rutina}
                         </h1>
                     </div>
+                    <DeleteWorkoutButton workoutId={workout._id} />
                 </div>
             </header>
 
@@ -60,7 +62,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                             <div className="w-6 sm:w-8 shrink-0 text-center">Set</div>
                             <div className="flex-1 min-w-0 text-center">Peso</div>
                             <div className="flex-1 min-w-0 text-center">Reps</div>
-                            <div className="w-12 shrink-0 text-center">Fallo</div>
+                            <div className="w-12 shrink-0 text-center">¿Al fallo?</div>
                         </div>
 
                         {/* Sets List */}

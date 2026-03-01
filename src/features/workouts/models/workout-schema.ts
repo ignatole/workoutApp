@@ -24,6 +24,9 @@ const WorkoutSchema = new Schema<IWorkoutDocument>({
     fecha: { type: Date, required: true, default: Date.now },
     nombre_rutina: { type: String, required: true },
     ejercicios: { type: [ExerciseSchema], required: true, default: [] },
+    tipo: { type: String, enum: ["rutina", "clase"], default: "rutina" },
+    duracion_horas: { type: Number, required: false },
+    comentario: { type: String, required: false },
 });
 
 // --- Model Export ---

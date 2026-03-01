@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { Dumbbell, Calendar, SearchX } from "lucide-react";
+import { StartWorkoutButton } from "@/features/workouts/components/start-workout-button";
+import { Calendar, SearchX } from "lucide-react";
 import { getRecentWorkouts } from "@/features/workouts/actions/workout-actions";
 import { WorkoutHistory } from "@/features/workouts/components/workout-history";
 
@@ -16,12 +15,7 @@ export default async function Home() {
       </header>
 
       <div className="mt-4 mb-10">
-        <Link href="/workout" className="w-full">
-          <Button variant="giant" className="gap-3 h-16 w-full rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-lg flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.3)] mx-auto">
-            <Dumbbell className="w-6 h-6" />
-            Empezar Entrenamiento
-          </Button>
-        </Link>
+        <StartWorkoutButton />
       </div>
 
       {/* Recent Activity */}

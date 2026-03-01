@@ -50,6 +50,7 @@ export function ExerciseCard({ exercise, onUpdate, onDelete, canDelete = true }:
                     <Input
                         value={exercise.nombre}
                         onChange={(e) => onUpdate({ nombre: e.target.value })}
+                        placeholder="Ej. Press Banca"
                         className="text-xl font-bold text-zinc-100 bg-transparent border-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 focus-visible:border-indigo-500 rounded-none w-full truncate border-b border-b-transparent hover:border-b-zinc-800"
                     />
                     <Input
