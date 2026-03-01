@@ -2,6 +2,7 @@ import { StartWorkoutButton } from "@/features/workouts/components/start-workout
 import { Calendar, SearchX } from "lucide-react";
 import { getRecentWorkouts } from "@/features/workouts/actions/workout-actions";
 import { WorkoutHistory } from "@/features/workouts/components/workout-history";
+import { LogoutButton } from "@/components/ui/logout-button";
 
 export default async function Home() {
   const recentWorkouts = await getRecentWorkouts();
@@ -9,9 +10,12 @@ export default async function Home() {
   return (
     <main className="min-h-screen p-4 pb-20 max-w-md mx-auto flex flex-col">
       {/* Header */}
-      <header className="pt-8 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Mis Entrenamientos</h1>
-        <p className="text-zinc-400 mt-1">¿Listo para romperla hoy?</p>
+      <header className="pt-8 pb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Mis Entrenamientos</h1>
+          <p className="text-zinc-400 mt-1">¿Listo para romperla hoy?</p>
+        </div>
+        <LogoutButton />
       </header>
 
       <div className="mt-4 mb-10">

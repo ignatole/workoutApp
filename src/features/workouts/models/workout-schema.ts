@@ -21,6 +21,7 @@ const ExerciseSchema = new Schema<IExerciseDocument>({
 });
 
 const WorkoutSchema = new Schema<IWorkoutDocument>({
+    userEmail: { type: String, required: true },
     fecha: { type: Date, required: true, default: Date.now },
     nombre_rutina: { type: String, required: true },
     ejercicios: { type: [ExerciseSchema], required: true, default: [] },

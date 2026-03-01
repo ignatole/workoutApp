@@ -29,6 +29,7 @@ export interface IExercise {
 }
 
 export interface IWorkout {
+    userEmail: string;
     fecha: Date;
     nombre_rutina: string;
     ejercicios: IExercise[];

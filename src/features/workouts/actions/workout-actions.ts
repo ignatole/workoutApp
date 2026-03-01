@@ -5,12 +5,16 @@ import Workout from "@/features/workouts/models/workout-schema";
 import type { IWorkout } from "@/features/workouts/types";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit } from "@/core/security/rate-limit";
+import { auth } from "@/core/security/auth";
 
 export async function getRecentWorkouts() {
     try {
+        const session = await auth();
+        if (!session?.user?.email) return [];
+
         await dbConnect();
 
-        const workouts = await Workout.find({})
+        const workouts = await Workout.find({ userEmail: session.user.email })
             .sort({ fecha: -1 })
             .limit(10)
             .lean();
@@ -25,12 +29,15 @@ export async function getRecentWorkouts() {
 
 export async function saveWorkout(workoutData: any) {
     try {
+        const session = await auth();
+        if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
         const rateLimit = await checkRateLimit(10); // Max 10 saves per minute
         if (!rateLimit.success) return { success: false, error: rateLimit.error };
 
         await dbConnect();
 
-        const newWorkout = new Workout(workoutData);
+        const newWorkout = new Workout({ ...workoutData, userEmail: session.user.email });
         await newWorkout.save();
 
         revalidatePath("/"); // Refresh the dashboard cache
@@ -44,9 +51,12 @@ export async function saveWorkout(workoutData: any) {
 
 export async function getWorkoutById(id: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.email) return null;
+
         await dbConnect();
 
-        const workout = await Workout.findById(id).lean();
+        const workout = await Workout.findOne({ _id: id, userEmail: session.user.email }).lean();
 
         if (!workout) return null;
 
@@ -60,13 +70,16 @@ export async function getWorkoutById(id: string) {
 
 export async function updateWorkoutComment(id: string, comentario: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
         const rateLimit = await checkRateLimit(15);
         if (!rateLimit.success) return { success: false, error: rateLimit.error };
 
         await dbConnect();
 
-        const updatedWorkout = await Workout.findByIdAndUpdate(
-            id,
+        const updatedWorkout = await Workout.findOneAndUpdate(
+            { _id: id, userEmail: session.user.email },
             { comentario },
             { new: true }
         );
@@ -86,12 +99,15 @@ export async function updateWorkoutComment(id: string, comentario: string) {
 
 export async function deleteWorkout(id: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+
         const rateLimit = await checkRateLimit(10);
         if (!rateLimit.success) return { success: false, error: rateLimit.error };
 
         await dbConnect();
 
-        const deletedWorkout = await Workout.findByIdAndDelete(id);
+        const deletedWorkout = await Workout.findOneAndDelete({ _id: id, userEmail: session.user.email });
 
         if (!deletedWorkout) {
             return { success: false, error: "Workout not found" };
