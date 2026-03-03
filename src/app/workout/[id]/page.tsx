@@ -58,32 +58,32 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                         </div>
 
                         {/* Sets Header Labels */}
-                        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 px-1 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                            <div className="w-6 sm:w-8 shrink-0 text-center">Set</div>
-                            <div className="flex-1 min-w-0 text-center">Peso</div>
-                            <div className="flex-1 min-w-0 text-center">Reps</div>
-                            <div className="w-12 shrink-0 text-center">¿Al fallo?</div>
+                        <div className="flex items-center mb-2 px-1 text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-950/30 rounded-lg py-2">
+                            <div className="w-12 shrink-0 text-center">Set</div>
+                            <div className="flex-1 min-w-0 text-center border-l border-zinc-800/80">Peso</div>
+                            <div className="flex-1 min-w-0 text-center border-l border-zinc-800/80">Reps</div>
+                            <div className="w-16 shrink-0 text-center border-l border-zinc-800/80">Fallo</div>
                         </div>
 
                         {/* Sets List */}
-                        <div className="space-y-2 mb-2">
+                        <div className="space-y-1.5 mb-2">
                             {exercise.series.map((set, setIndex) => (
                                 <div key={setIndex} className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-1.5 sm:gap-2 py-2 border-b border-zinc-800/50 last:border-0">
-                                        <div className="w-6 sm:w-8 shrink-0 text-center text-zinc-400 font-medium text-sm">
+                                    <div className="flex items-center py-2.5 bg-zinc-900/50 border border-zinc-800/60 rounded-xl hover:bg-zinc-800/50 transition-colors">
+                                        <div className="w-12 shrink-0 text-center text-zinc-400 font-bold text-xs">
                                             {setIndex + 1}
                                         </div>
-                                        <div className="flex-1 min-w-0 text-center text-zinc-100 font-medium">
-                                            {set.peso} <span className="text-[10px] text-zinc-500 font-normal">kg</span>
+                                        <div className="flex-1 min-w-0 text-center text-zinc-100 font-semibold text-sm border-l border-zinc-800/50 flex flex-col items-center justify-center">
+                                            {set.peso} <span className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">kg</span>
                                         </div>
-                                        <div className="flex-1 min-w-0 text-center text-zinc-100 font-medium">
-                                            {set.reps} <span className="text-[10px] text-zinc-500 font-normal">reps</span>
+                                        <div className="flex-1 min-w-0 text-center text-zinc-100 font-semibold text-sm border-l border-zinc-800/50 flex flex-col items-center justify-center">
+                                            {set.reps} <span className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">reps</span>
                                         </div>
-                                        <div className="w-12 shrink-0 flex justify-center">
+                                        <div className="w-16 shrink-0 flex justify-center border-l border-zinc-800/50">
                                             {set.al_fallo ? (
-                                                <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-zinc-900 shadow-sm" />
+                                                <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] border border-red-400/50" />
                                             ) : (
-                                                <div className="w-3 h-3 rounded-full bg-zinc-700/50 border border-zinc-600" />
+                                                <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-700" />
                                             )}
                                         </div>
                                     </div>

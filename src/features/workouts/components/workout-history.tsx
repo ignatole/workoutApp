@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2 } from "lucide-react";
+import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2, Calendar, Clock, Dumbbell, Activity, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { updateWorkoutComment, deleteWorkout } from "../actions/workout-actions";
@@ -133,56 +133,85 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
                 const isMonthCollapsed = collapsedMonths[monthYear];
 
                 return (
-                    <div key={monthYear} className="space-y-3">
+                    <div key={monthYear} className="space-y-4">
                         <button
                             onClick={() => toggleMonth(monthYear)}
-                            className="w-full flex items-center justify-between py-2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                            className="w-full flex items-center justify-between py-3 px-4 bg-zinc-900/40 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 transition-colors"
                         >
-                            <h3 className="text-base font-bold uppercase tracking-wider">{monthYear}</h3>
-                            {isMonthCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-300">{monthYear}</h3>
+                            <div className="bg-zinc-800/50 p-1.5 rounded-full">
+                                {isMonthCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                            </div>
                         </button>
 
-                        {!isMonthCollapsed && (
-                            <div className="space-y-5 px-1">
+                        <div className={`grid transition-all duration-300 ease-in-out ${isMonthCollapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
+                            <div className="overflow-hidden space-y-6 px-1">
                                 {Object.entries(weeks).map(([week, weekData]) => {
                                     const weekKey = `${monthYear}-${week}`;
                                     const isWeekCollapsed = collapsedWeeks[weekKey];
 
                                     return (
-                                        <div key={weekKey} className="space-y-2 pl-3 border-l-2 border-zinc-800/50">
+                                        <div key={weekKey} className="space-y-3 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-zinc-800/60 ml-1">
                                             <button
                                                 onClick={() => toggleWeek(weekKey)}
-                                                className="w-full flex items-center justify-between text-left"
+                                                className="w-full flex items-center justify-between text-left group pl-8 relative"
                                             >
+                                                {/* Line node indicator */}
+                                                <div className="absolute left-[7px] top-1/2 -translate-y-1/2 w-[9px] h-[9px] rounded-full bg-zinc-800 border-2 border-zinc-950 group-hover:bg-indigo-500 transition-colors z-10" />
+
                                                 <div>
-                                                    <h4 className="text-sm font-semibold text-zinc-300">{week}</h4>
-                                                    <p className="text-xs text-zinc-500 mt-0.5">
-                                                        {formatDate(weekData.firstDate)} - {formatDate(weekData.lastDate)} • {weekData.count} entreno{weekData.count !== 1 ? 's' : ''}
+                                                    <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-indigo-400 transition-colors">{week}</h4>
+                                                    <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5 font-medium">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {formatDate(weekData.firstDate)} - {formatDate(weekData.lastDate)}
+                                                        <span className="text-zinc-700 mx-0.5">•</span>
+                                                        <Activity className="w-3 h-3" />
+                                                        {weekData.count} entreno{weekData.count !== 1 ? 's' : ''}
                                                     </p>
                                                 </div>
-                                                <div className="text-zinc-500 hover:text-zinc-300 p-1">
+                                                <div className="text-zinc-600 group-hover:text-zinc-300 p-2 transition-colors">
                                                     {isWeekCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                                                 </div>
                                             </button>
 
-                                            {!isWeekCollapsed && (
-                                                <div className="space-y-3 pt-2">
+                                            <div className={`grid transition-all duration-300 ease-in-out pl-8 ${isWeekCollapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
+                                                <div className="overflow-hidden space-y-3 pt-1">
                                                     {weekData.workouts.map((workout: any) => {
+                                                        const isClass = workout.tipo === "clase";
+                                                        const CardAccentColor = isClass ? "bg-indigo-500" : "bg-emerald-500";
+                                                        const CardBorderColor = isClass ? "border-indigo-500/20" : "border-emerald-500/20";
+                                                        const CardHoverBorder = isClass ? "group-hover:border-indigo-500/40" : "group-hover:border-emerald-500/40";
+                                                        const AccentBadgeBg = isClass ? "bg-indigo-500/10 text-indigo-400" : "bg-emerald-500/10 text-emerald-400";
+
                                                         const workoutCard = (
-                                                            <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer hover:bg-zinc-800">
-                                                                <div>
-                                                                    <h3 className="font-medium text-zinc-100">{workout.nombre_rutina}</h3>
-                                                                    <div className="flex items-center gap-3 mt-1.5 text-sm text-zinc-500">
-                                                                        <span>{formatDate(workout.fecha)}</span>
-                                                                        <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-                                                                        {workout.tipo === "clase" ? (
-                                                                            <span>{formatDuration(workout.duracion_horas || 0)}</span>
+                                                            <div className={`group relative bg-zinc-900/60 backdrop-blur-sm border ${CardBorderColor} ${CardHoverBorder} rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-all hover:bg-zinc-800/80 hover:shadow-lg hover:shadow-black/20 overflow-hidden`}>
+                                                                {/* Indicator Ribbon */}
+                                                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${CardAccentColor} opacity-70 group-hover:opacity-100 transition-opacity`} />
+
+                                                                <div className="pl-2">
+                                                                    <h3 className="font-semibold text-zinc-100 text-base mb-2 group-hover:text-white transition-colors">{workout.nombre_rutina}</h3>
+                                                                    <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[13px] text-zinc-500 font-medium">
+                                                                        <div className="flex items-center gap-1.5 bg-zinc-950/50 px-2 py-0.5 rounded-md border border-zinc-800/50">
+                                                                            <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                                                                            <span>{formatDate(workout.fecha)}</span>
+                                                                        </div>
+
+                                                                        {isClass ? (
+                                                                            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
+                                                                                <Clock className="w-3.5 h-3.5" />
+                                                                                <span>{formatDuration(workout.duracion_horas || 0)}</span>
+                                                                            </div>
                                                                         ) : (
-                                                                            <span>Vol. {calculateVolume(workout.ejercicios)} kg</span>
+                                                                            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
+                                                                                <Dumbbell className="w-3.5 h-3.5" />
+                                                                                <span>{calculateVolume(workout.ejercicios)} kg</span>
+                                                                            </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                                <ChevronRight className="w-5 h-5 text-zinc-600" />
+                                                                <div className="w-8 h-8 rounded-full bg-zinc-800/50 group-hover:bg-zinc-700 flex items-center justify-center transition-colors">
+                                                                    <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
+                                                                </div>
                                                             </div>
                                                         );
 
@@ -208,55 +237,73 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
                                                         );
                                                     })}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                     );
                                 })}
                             </div>
-                        )}
+                        </div>
                     </div>
                 );
             })}
 
             {/* Class Details Modal */}
             {selectedClass && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-                            <div>
-                                <h2 className="text-xl font-bold text-zinc-100">{selectedClass.nombre_rutina}</h2>
-                                <p className="text-sm text-zinc-400 mt-1">{formatDate(selectedClass.fecha)}</p>
-                            </div>
-                            <div className="flex items-center gap-2 mb-auto">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="absolute inset-0" onClick={() => setSelectedClass(null)} />
+                    <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl relative animate-in zoom-in-95 duration-300">
+                        {/* Header Image/Gradient Block */}
+                        <div className="h-24 bg-gradient-to-br from-indigo-900/40 via-zinc-900 to-zinc-950 border-b border-indigo-500/10 relative p-5 flex flex-col justify-end">
+                            <div className="absolute top-3 right-3 flex items-center gap-2">
                                 <button
                                     onClick={handleDeleteClass}
                                     disabled={isDeleting}
-                                    className="text-zinc-500 hover:text-red-400 transition-colors bg-zinc-800/50 hover:bg-zinc-800 p-2 rounded-full disabled:opacity-50"
+                                    className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors bg-zinc-950/50 p-2 rounded-full backdrop-blur-sm border border-zinc-800/50 disabled:opacity-50"
                                 >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setSelectedClass(null)}
-                                    className="text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-800/50 hover:bg-zinc-800 p-2 rounded-full"
+                                    className="text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors bg-zinc-950/50 p-2 rounded-full backdrop-blur-sm border border-zinc-800/50"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4" />
                                 </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold tracking-wider uppercase mb-1">
+                                <Activity className="w-3.5 h-3.5" />
+                                Clase de Funcional
                             </div>
                         </div>
 
-                        <div className="p-5 space-y-6">
-                            <div className="flex items-center justify-between bg-zinc-950/50 border border-zinc-800/50 rounded-2xl p-4">
-                                <span className="text-zinc-400 font-medium tracking-wide text-sm uppercase">Duración</span>
-                                <span className="text-2xl font-bold text-emerald-400">{formatDuration(selectedClass.duracion_horas || 0)}</span>
+                        <div className="px-6 py-5">
+                            <h2 className="text-2xl font-bold text-white mb-1">{selectedClass.nombre_rutina}</h2>
+                            <div className="flex items-center gap-2 text-sm text-zinc-400 font-medium mb-6">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(selectedClass.fecha)}
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="text-sm font-medium text-zinc-300 ml-1">Comentario (Opcional)</label>
+                            <div className="flex items-center justify-between bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4 mb-6 relative overflow-hidden">
+                                <div className="absolute -right-4 -top-4 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl" />
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                        <Clock className="w-4 h-4 text-indigo-400" />
+                                    </div>
+                                    <span className="text-zinc-300 font-semibold tracking-wide text-sm">Duración</span>
+                                </div>
+                                <span className="text-2xl font-black text-indigo-400">{formatDuration(selectedClass.duracion_horas || 0)}</span>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                <label className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+                                    <User className="w-4 h-4 text-zinc-500" />
+                                    Notas Personales
+                                </label>
                                 <textarea
                                     value={classComment}
                                     onChange={(e) => setClassComment(e.target.value)}
-                                    placeholder="¿Cómo te fue en la clase? ¿Alguna nota extra?"
-                                    className="w-full flex min-h-[100px] rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-3 text-sm text-zinc-50 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                                    placeholder="¿Cómo te sentiste? ¿Algo que mejorar?"
+                                    className="w-full flex min-h-[120px] rounded-xl border border-zinc-800/60 bg-zinc-900/50 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 focus-visible:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all shadow-inner shadow-black/20"
                                 />
                             </div>
 

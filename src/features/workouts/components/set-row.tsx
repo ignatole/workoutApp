@@ -24,7 +24,7 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                 </div>
 
                 {/* Weight */}
-                <div className="flex-1 min-w-0 relative">
+                <div className="flex-1 min-w-0 relative border-l border-zinc-800/80">
                     <Input
                         type="number"
                         inputMode="decimal"
@@ -36,7 +36,7 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                             if (typeof val === 'number' && val < 0) return;
                             onUpdate({ peso: val });
                         }}
-                        className="pr-6 text-center text-base sm:text-lg font-medium h-11"
+                        className="pr-6 text-center text-base sm:text-lg font-medium h-11 border-none shadow-none focus-visible:ring-0 focus-visible:bg-zinc-900 rounded-none bg-transparent"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-medium">
                         kg
@@ -44,7 +44,7 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                 </div>
 
                 {/* Reps */}
-                <div className="flex-1 min-w-0 relative">
+                <div className="flex-1 min-w-0 relative border-l border-zinc-800/80">
                     <Input
                         type="number"
                         inputMode="numeric"
@@ -56,7 +56,7 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                             if (typeof val === 'number' && val < 0) return;
                             onUpdate({ reps: val });
                         }}
-                        className="pr-8 text-center text-base sm:text-lg font-medium h-11"
+                        className="pr-8 text-center text-base sm:text-lg font-medium h-11 border-none shadow-none focus-visible:ring-0 focus-visible:bg-zinc-900 rounded-none bg-transparent"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-medium">
                         reps
@@ -64,16 +64,16 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                 </div>
 
                 {/* To Failure Toggle */}
-                <div className="flex items-center justify-center w-12 shrink-0">
+                <div className="flex items-center justify-center w-12 shrink-0 border-l border-zinc-800/80 h-11">
                     <Toggle checked={data.al_fallo} onChange={(val) => onUpdate({ al_fallo: val })} label="Al Fallo" />
                 </div>
 
                 {/* Actions container */}
-                <div className="flex shrink-0 gap-0.5">
+                <div className="flex shrink-0 gap-0.5 border-l border-zinc-800/80 h-11 items-center justify-end pl-1">
                     {/* Comment Toggle */}
                     <button
                         onClick={onToggleComment}
-                        className={`w-8 h-10 flex items-center justify-center rounded-xl transition-colors ${showComment || data.comentario ? 'bg-indigo-500/20 text-indigo-400' : 'bg-transparent text-zinc-500 hover:text-zinc-300'}`}
+                        className={`w-8 h-9 flex items-center justify-center rounded-xl transition-colors ${showComment || data.comentario ? 'bg-indigo-500/20 text-indigo-400' : 'bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
                     >
                         <MessageCircle className="w-4 h-4" />
                     </button>
@@ -82,8 +82,8 @@ export function SetRow({ setNumber, data, onUpdate, onDelete, showComment, onTog
                     <button
                         onClick={onDelete}
                         disabled={!onDelete}
-                        className={`w-8 h-10 flex items-center justify-center rounded-xl bg-transparent transition-colors ${onDelete
-                            ? 'text-zinc-600 hover:text-red-400 opacity-100 cursor-pointer'
+                        className={`w-8 h-9 flex items-center justify-center rounded-xl bg-transparent transition-colors ${onDelete
+                            ? 'text-zinc-600 hover:text-red-400 opacity-100 cursor-pointer hover:bg-zinc-800/50'
                             : 'text-zinc-700 opacity-50 cursor-not-allowed'
                             }`}
                     >

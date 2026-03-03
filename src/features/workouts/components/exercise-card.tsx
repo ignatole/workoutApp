@@ -71,12 +71,12 @@ export function ExerciseCard({ exercise, onUpdate, onDelete, canDelete = true }:
             </div>
 
             {/* Sets Header Labels */}
-            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 px-1 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 px-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-950/30 rounded-lg py-2">
                 <div className="w-6 sm:w-8 shrink-0 text-center">Set</div>
-                <div className="flex-1 min-w-0 text-center">Peso</div>
-                <div className="flex-1 min-w-0 text-center">Reps</div>
-                <div className="w-12 shrink-0 text-center">Fallo</div>
-                <div className="w-[66px] shrink-0"></div> {/* Space for Comment & Trash buttons */}
+                <div className="flex-1 min-w-0 text-center border-l border-zinc-800/80">Peso</div>
+                <div className="flex-1 min-w-0 text-center border-l border-zinc-800/80">Reps</div>
+                <div className="w-12 shrink-0 text-center border-l border-zinc-800/80">Fallo</div>
+                <div className="w-[66px] shrink-0 border-l border-zinc-800/80 h-full"></div> {/* Space for Comment & Trash buttons */}
             </div>
 
             {/* Sets List */}
