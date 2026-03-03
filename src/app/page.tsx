@@ -1,12 +1,20 @@
 import { StartWorkoutButton } from "@/features/workouts/components/start-workout-button";
-import { Calendar, SearchX } from "lucide-react";
-import { getRecentWorkouts } from "@/features/workouts/actions/workout-actions";
-import { WorkoutHistory } from "@/features/workouts/components/workout-history";
+import { Calendar } from "lucide-react";
 import { LogoutButton } from "@/components/ui/logout-button";
+import { Suspense } from "react";
+import { WorkoutHistoryStream } from "@/features/workouts/components/workout-history-stream";
 
-export default async function Home() {
-  const recentWorkouts = await getRecentWorkouts();
+function HistorySkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="h-20 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse" />
+      ))}
+    </div>
+  );
+}
 
+export default function Home() {
   return (
     <main className="min-h-screen p-4 pb-20 max-w-md mx-auto flex flex-col">
       {/* Header */}
@@ -29,15 +37,9 @@ export default async function Home() {
           Historial
         </h2>
 
-        {recentWorkouts.length === 0 ? (
-          <div className="text-center py-10 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col items-center justify-center text-zinc-500">
-            <SearchX className="w-8 h-8 mb-3 opacity-50" />
-            <p>No hay entrenamientos todavía.</p>
-            <p className="text-sm mt-1">¡Arrancá tu primera rutina!</p>
-          </div>
-        ) : (
-          <WorkoutHistory workouts={recentWorkouts} />
-        )}
+        <Suspense fallback={<HistorySkeleton />}>
+          <WorkoutHistoryStream />
+        </Suspense>
       </section>
     </main>
   );

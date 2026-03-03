@@ -1,17 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2, Calendar, Clock, Dumbbell, Activity, User } from "lucide-react";
+import { ChevronRight, ChevronDown, X, Trash2, Calendar, Clock, Dumbbell, Activity, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { updateWorkoutComment, deleteWorkout } from "../actions/workout-actions";
-
-// Helper to get the week number in a month
-const getWeekOfMonth = (date: Date) => {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil((date.getDate() + firstDay) / 7);
-};
 
 const formatDate = (dateString: string | Date) => {
     return new Intl.DateTimeFormat('es-AR', {
@@ -39,24 +32,12 @@ const formatDuration = (hours: number) => {
     return `${m} min`;
 };
 
-export function WorkoutHistory({ workouts }: { workouts: any[] }) {
-    // Keep track of which months and weeks are collapsed. True = collapsed.
-    const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>({});
-    const [collapsedWeeks, setCollapsedWeeks] = useState<Record<string, boolean>>({});
-
+export function WorkoutHistoryClient({ groupedData }: { groupedData: Record<string, Record<string, any>> }) {
     // State for Class Modal
     const [selectedClass, setSelectedClass] = useState<any | null>(null);
     const [classComment, setClassComment] = useState("");
     const [isSavingComment, setIsSavingComment] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    const toggleMonth = (monthKey: string) => {
-        setCollapsedMonths(prev => ({ ...prev, [monthKey]: !prev[monthKey] }));
-    };
-
-    const toggleWeek = (weekKey: string) => {
-        setCollapsedWeeks(prev => ({ ...prev, [weekKey]: !prev[weekKey] }));
-    };
 
     const handleSaveComment = async () => {
         if (!selectedClass) return;
@@ -64,8 +45,6 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
         const res = await updateWorkoutComment(selectedClass._id, classComment);
         setIsSavingComment(false);
         if (res.success) {
-            // Update the local state to reflect the new comment without a full reload if possible,
-            // but the server action already revalidates the path.
             selectedClass.comentario = classComment;
             setSelectedClass(null);
         } else {
@@ -82,168 +61,115 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
 
         if (res.success) {
             setSelectedClass(null);
-            // The server action will revalidate the path
         } else {
             alert("Error al eliminar la clase: " + res.error);
         }
     };
 
-    // Group workouts
-    const groupedData = useMemo(() => {
-        const groups: Record<string, Record<string, {
-            workouts: any[];
-            firstDate: Date;
-            lastDate: Date;
-            count: number;
-        }>> = {};
-
-        workouts.forEach((workout) => {
-            const date = new Date(workout.fecha);
-            const monthYear = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(date);
-            const capitalizedMonthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
-
-            const week = `Semana ${getWeekOfMonth(date)}`;
-
-            if (!groups[capitalizedMonthYear]) groups[capitalizedMonthYear] = {};
-            if (!groups[capitalizedMonthYear][week]) {
-                groups[capitalizedMonthYear][week] = {
-                    workouts: [],
-                    firstDate: date,
-                    lastDate: date,
-                    count: 0
-                };
-            }
-
-            const weekData = groups[capitalizedMonthYear][week];
-            weekData.workouts.push(workout);
-            weekData.count += 1;
-
-            // Assume workouts are sorted descending by date, so first element is the latest (last date of week)
-            // But we can accurately compare timestamps to be completely safe:
-            if (date < weekData.firstDate) weekData.firstDate = date;
-            if (date > weekData.lastDate) weekData.lastDate = date;
-        });
-
-        return groups;
-    }, [workouts]);
-
     return (
         <div className="space-y-6">
             {Object.entries(groupedData).map(([monthYear, weeks]) => {
-                const isMonthCollapsed = collapsedMonths[monthYear];
-
                 return (
-                    <div key={monthYear} className="space-y-4">
-                        <button
-                            onClick={() => toggleMonth(monthYear)}
-                            className="w-full flex items-center justify-between py-3 px-4 bg-zinc-900/40 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 transition-colors"
-                        >
+                    <details key={monthYear} className="space-y-4 group/month" open>
+                        <summary className="w-full flex items-center justify-between py-3 px-4 bg-zinc-900/40 rounded-2xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                             <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-300">{monthYear}</h3>
                             <div className="bg-zinc-800/50 p-1.5 rounded-full">
-                                {isMonthCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                                <ChevronDown className="w-4 h-4 transition-transform group-open/month:rotate-180" />
                             </div>
-                        </button>
+                        </summary>
 
-                        <div className={`grid transition-all duration-300 ease-in-out ${isMonthCollapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
-                            <div className="overflow-hidden space-y-6 px-1">
-                                {Object.entries(weeks).map(([week, weekData]) => {
-                                    const weekKey = `${monthYear}-${week}`;
-                                    const isWeekCollapsed = collapsedWeeks[weekKey];
+                        <div className="overflow-hidden space-y-6 px-1 mt-4">
+                            {Object.entries(weeks).map(([week, weekData]) => {
+                                const weekKey = `${monthYear}-${week}`;
 
-                                    return (
-                                        <div key={weekKey} className="space-y-3 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-zinc-800/60 ml-1">
-                                            <button
-                                                onClick={() => toggleWeek(weekKey)}
-                                                className="w-full flex items-center justify-between text-left group pl-8 relative"
-                                            >
-                                                {/* Line node indicator */}
-                                                <div className="absolute left-[7px] top-1/2 -translate-y-1/2 w-[9px] h-[9px] rounded-full bg-zinc-800 border-2 border-zinc-950 group-hover:bg-indigo-500 transition-colors z-10" />
+                                return (
+                                    <details key={weekKey} className="space-y-3 relative group/week before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-zinc-800/60 ml-1" open>
+                                        <summary className="w-full flex items-center justify-between text-left group pl-8 relative cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                                            {/* Line node indicator */}
+                                            <div className="absolute left-[7px] top-1/2 -translate-y-1/2 w-[9px] h-[9px] rounded-full bg-zinc-800 border-2 border-zinc-950 group-hover:bg-indigo-500 transition-colors z-10" />
 
-                                                <div>
-                                                    <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-indigo-400 transition-colors">{week}</h4>
-                                                    <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5 font-medium">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {formatDate(weekData.firstDate)} - {formatDate(weekData.lastDate)}
-                                                        <span className="text-zinc-700 mx-0.5">•</span>
-                                                        <Activity className="w-3 h-3" />
-                                                        {weekData.count} entreno{weekData.count !== 1 ? 's' : ''}
-                                                    </p>
-                                                </div>
-                                                <div className="text-zinc-600 group-hover:text-zinc-300 p-2 transition-colors">
-                                                    {isWeekCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                                                </div>
-                                            </button>
-
-                                            <div className={`grid transition-all duration-300 ease-in-out pl-8 ${isWeekCollapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
-                                                <div className="overflow-hidden space-y-3 pt-1">
-                                                    {weekData.workouts.map((workout: any) => {
-                                                        const isClass = workout.tipo === "clase";
-                                                        const CardAccentColor = isClass ? "bg-indigo-500" : "bg-emerald-500";
-                                                        const CardBorderColor = isClass ? "border-indigo-500/20" : "border-emerald-500/20";
-                                                        const CardHoverBorder = isClass ? "group-hover:border-indigo-500/40" : "group-hover:border-emerald-500/40";
-                                                        const AccentBadgeBg = isClass ? "bg-indigo-500/10 text-indigo-400" : "bg-emerald-500/10 text-emerald-400";
-
-                                                        const workoutCard = (
-                                                            <div className={`group relative bg-zinc-900/60 backdrop-blur-sm border ${CardBorderColor} ${CardHoverBorder} rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-all hover:bg-zinc-800/80 hover:shadow-lg hover:shadow-black/20 overflow-hidden`}>
-                                                                {/* Indicator Ribbon */}
-                                                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${CardAccentColor} opacity-70 group-hover:opacity-100 transition-opacity`} />
-
-                                                                <div className="pl-2">
-                                                                    <h3 className="font-semibold text-zinc-100 text-base mb-2 group-hover:text-white transition-colors">{workout.nombre_rutina}</h3>
-                                                                    <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[13px] text-zinc-500 font-medium">
-                                                                        <div className="flex items-center gap-1.5 bg-zinc-950/50 px-2 py-0.5 rounded-md border border-zinc-800/50">
-                                                                            <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                                                                            <span>{formatDate(workout.fecha)}</span>
-                                                                        </div>
-
-                                                                        {isClass ? (
-                                                                            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
-                                                                                <Clock className="w-3.5 h-3.5" />
-                                                                                <span>{formatDuration(workout.duracion_horas || 0)}</span>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
-                                                                                <Dumbbell className="w-3.5 h-3.5" />
-                                                                                <span>{calculateVolume(workout.ejercicios)} kg</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="w-8 h-8 rounded-full bg-zinc-800/50 group-hover:bg-zinc-700 flex items-center justify-center transition-colors">
-                                                                    <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
-                                                                </div>
-                                                            </div>
-                                                        );
-
-                                                        if (workout.tipo === "clase") {
-                                                            return (
-                                                                <button
-                                                                    key={workout._id}
-                                                                    className="block w-full text-left"
-                                                                    onClick={() => {
-                                                                        setSelectedClass(workout);
-                                                                        setClassComment(workout.comentario || "");
-                                                                    }}
-                                                                >
-                                                                    {workoutCard}
-                                                                </button>
-                                                            );
-                                                        }
-
-                                                        return (
-                                                            <Link href={`/workout/${workout._id}`} key={workout._id} className="block w-full">
-                                                                {workoutCard}
-                                                            </Link>
-                                                        );
-                                                    })}
-                                                </div>
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-indigo-400 transition-colors">{week}</h4>
+                                                <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5 font-medium">
+                                                    <Calendar className="w-3 h-3" />
+                                                    {formatDate(weekData.firstDateStr)} - {formatDate(weekData.lastDateStr)}
+                                                    <span className="text-zinc-700 mx-0.5">•</span>
+                                                    <Activity className="w-3 h-3" />
+                                                    {weekData.count} entreno{weekData.count !== 1 ? 's' : ''}
+                                                </p>
                                             </div>
+                                            <div className="text-zinc-600 group-hover/week:text-zinc-300 p-2 transition-colors">
+                                                <ChevronDown className="w-4 h-4 transition-transform group-open/week:rotate-180" />
+                                            </div>
+                                        </summary>
+
+                                        <div className="overflow-hidden space-y-3 pt-1 pl-8 mt-3">
+                                            {weekData.workouts.map((workout: any) => {
+                                                const isClass = workout.tipo === "clase";
+                                                const CardAccentColor = isClass ? "bg-indigo-500" : "bg-emerald-500";
+                                                const CardBorderColor = isClass ? "border-indigo-500/20" : "border-emerald-500/20";
+                                                const CardHoverBorder = isClass ? "group-hover:border-indigo-500/40" : "group-hover:border-emerald-500/40";
+                                                const AccentBadgeBg = isClass ? "bg-indigo-500/10 text-indigo-400" : "bg-emerald-500/10 text-emerald-400";
+
+                                                const workoutCard = (
+                                                    <div className={`group relative bg-zinc-900/60 backdrop-blur-sm border ${CardBorderColor} ${CardHoverBorder} rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-all hover:bg-zinc-800/80 hover:shadow-lg hover:shadow-black/20 overflow-hidden`}>
+                                                        {/* Indicator Ribbon */}
+                                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${CardAccentColor} opacity-70 group-hover:opacity-100 transition-opacity`} />
+
+                                                        <div className="pl-2">
+                                                            <h3 className="font-semibold text-zinc-100 text-base mb-2 group-hover:text-white transition-colors">{workout.nombre_rutina}</h3>
+                                                            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[13px] text-zinc-500 font-medium">
+                                                                <div className="flex items-center gap-1.5 bg-zinc-950/50 px-2 py-0.5 rounded-md border border-zinc-800/50">
+                                                                    <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                                                                    <span>{formatDate(workout.fecha)}</span>
+                                                                </div>
+
+                                                                {isClass ? (
+                                                                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
+                                                                        <Clock className="w-3.5 h-3.5" />
+                                                                        <span>{formatDuration(workout.duracion_horas || 0)}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
+                                                                        <Dumbbell className="w-3.5 h-3.5" />
+                                                                        <span>{calculateVolume(workout.ejercicios)} kg</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-8 h-8 rounded-full bg-zinc-800/50 group-hover:bg-zinc-700 flex items-center justify-center transition-colors">
+                                                            <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
+                                                        </div>
+                                                    </div>
+                                                );
+
+                                                if (workout.tipo === "clase") {
+                                                    return (
+                                                        <button
+                                                            key={workout._id}
+                                                            className="block w-full text-left"
+                                                            onClick={() => {
+                                                                setSelectedClass(workout);
+                                                                setClassComment(workout.comentario || "");
+                                                            }}
+                                                        >
+                                                            {workoutCard}
+                                                        </button>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <Link href={`/workout/${workout._id}`} key={workout._id} className="block w-full">
+                                                        {workoutCard}
+                                                    </Link>
+                                                );
+                                            })}
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    </details>
+                                );
+                            })}
                         </div>
-                    </div>
+                    </details>
                 );
             })}
 

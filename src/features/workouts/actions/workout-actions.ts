@@ -6,21 +6,31 @@ import type { IWorkout } from "@/features/workouts/types";
 import { revalidatePath } from "next/cache";
 import { checkRateLimit } from "@/core/security/rate-limit";
 import { auth } from "@/core/security/auth";
+import { unstable_cache } from "next/cache";
+
+const getCachedRecentWorkouts = unstable_cache(
+    async (userEmail: string) => {
+        await dbConnect();
+        const workouts = await Workout.find({ userEmail })
+            .sort({ fecha: -1 })
+            .limit(10)
+            .select('nombre_rutina fecha tipo duracion_horas ejercicios.series.peso ejercicios.series.reps comentario')
+            .lean();
+        return JSON.parse(JSON.stringify(workouts));
+    },
+    ['recent-workouts'],
+    {
+        tags: ['workouts'],
+        revalidate: 60 * 5,
+    }
+);
 
 export async function getRecentWorkouts() {
     try {
         const session = await auth();
         if (!session?.user?.email) return [];
 
-        await dbConnect();
-
-        const workouts = await Workout.find({ userEmail: session.user.email })
-            .sort({ fecha: -1 })
-            .limit(10)
-            .lean();
-
-        // Convert MongoDB documents to plain objects serializeable by Next.js Server Actions
-        return JSON.parse(JSON.stringify(workouts)) as (IWorkout & { _id: string })[];
+        return await getCachedRecentWorkouts(session.user.email) as (IWorkout & { _id: string })[];
     } catch (error) {
         console.error("Error fetching workouts:", error);
         return [];
@@ -88,7 +98,8 @@ export async function updateWorkoutComment(id: string, comentario: string) {
             return { success: false, error: "Workout not found" };
         }
 
-        revalidatePath("/");
+        // We don't need to revalidate the main dashboard just for a comment update,
+        // because the dashboard list doesn't show the `comentario` field.
 
         return { success: true };
     } catch (error) {

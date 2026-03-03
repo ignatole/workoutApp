@@ -30,6 +30,9 @@ const WorkoutSchema = new Schema<IWorkoutDocument>({
     comentario: { type: String, required: false },
 });
 
+WorkoutSchema.index({ userEmail: 1, fecha: -1 });
+WorkoutSchema.index({ _id: 1, userEmail: 1 });
+
 // --- Model Export ---
 const Workout: Model<IWorkoutDocument> = mongoose.models.Workout || mongoose.model<IWorkoutDocument>('Workout', WorkoutSchema);
 
