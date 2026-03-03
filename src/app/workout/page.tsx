@@ -9,24 +9,27 @@ import { ExerciseCard } from "@/features/workouts/components/exercise-card";
 import type { ExerciseData } from "@/features/workouts/types";
 import { saveWorkout } from "@/features/workouts/actions/workout-actions";
 import { Input } from "@/components/ui/Input";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 
 export default function WorkoutSession() {
     const router = useRouter();
-    const [seconds, setSeconds] = useState(0);
-    const [routineName, setRoutineName] = useState("Nueva Rutina");
+    const [seconds, setSeconds, isSecondsMounted, clearSeconds] = usePersistentState("workout_seconds", 0);
+    const [routineName, setRoutineName, isRoutineMounted, clearRoutineName] = usePersistentState("workout_routineName", "Nueva Rutina");
 
-    const [exercises, setExercises] = useState<ExerciseData[]>([
-        {
-            id: Date.now().toString(),
-            nombre: "",
-            comentario_ejercicio: "",
-            series: [
-                { id: Date.now().toString() + "1", peso: "", reps: "", al_fallo: false, comentario: "" }
-            ]
-        }
-    ]);
+    const defaultExercise: ExerciseData = {
+        id: "default-exercise",
+        nombre: "",
+        comentario_ejercicio: "",
+        series: [
+            { id: "default-set-1", peso: "", reps: "", al_fallo: false, comentario: "" }
+        ]
+    };
+
+    const [exercises, setExercises, isExercisesMounted, clearExercises] = usePersistentState<ExerciseData[]>("workout_exercises", [defaultExercise]);
     const [isFinished, setIsFinished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    const isMounted = isSecondsMounted && isRoutineMounted && isExercisesMounted;
 
     // Simple Timer
     useEffect(() => {
@@ -86,6 +89,9 @@ export default function WorkoutSession() {
             const result = await saveWorkout(payload);
 
             if (result.success) {
+                clearSeconds();
+                clearRoutineName();
+                clearExercises();
                 router.push('/');
             } else {
                 alert("Error al guardar el entrenamiento. Verifica tus datos de conexión a la BD.");
@@ -97,6 +103,14 @@ export default function WorkoutSession() {
             setIsSaving(false);
         }
     };
+
+    if (!isMounted) {
+        return (
+            <main className="min-h-screen pb-24 max-w-md mx-auto flex flex-col pt-16 items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
+            </main>
+        );
+    }
 
     if (isFinished) {
         return (
