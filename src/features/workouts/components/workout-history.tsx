@@ -2,32 +2,34 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2, Calendar, Clock, Dumbbell, Activity, User } from "lucide-react";
+import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2, Calendar, Clock, Activity, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { updateWorkoutComment, deleteWorkout } from "../actions/workout-actions";
 
-// Helper to get the week number in a month
-const getWeekOfMonth = (date: Date) => {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil((date.getDate() + firstDay) / 7);
+// Helper to get the week range (Monday to Sunday)
+const getWeekRange = (date: Date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const formatDayMonth = (dateObj: Date) => `${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
+    return `${formatDayMonth(monday)} al ${formatDayMonth(sunday)}`;
 };
 
 const formatDate = (dateString: string | Date) => {
-    return new Intl.DateTimeFormat('es-AR', {
-        day: 'numeric',
-        month: 'short',
-    }).format(new Date(dateString));
-};
+    const date = new Date(dateString);
+    const dateStr = `${date.getDate()}/${date.getMonth() + 1}`;
 
-const calculateVolume = (ejercicios: any[]) => {
-    let volume = 0;
-    ejercicios.forEach(ex => {
-        ex.series.forEach((set: any) => {
-            volume += (set.peso || 0) * (set.reps || 0);
-        });
-    });
-    return volume.toLocaleString();
+    let weekdayStr = new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(date);
+    weekdayStr = weekdayStr.charAt(0).toUpperCase() + weekdayStr.slice(1);
+
+    return `${dateStr} - ${weekdayStr}`;
 };
 
 const formatDuration = (hours: number) => {
@@ -102,7 +104,7 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
             const monthYear = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(date);
             const capitalizedMonthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
 
-            const week = `Semana ${getWeekOfMonth(date)}`;
+            const week = `Semana del ${getWeekRange(date)}`;
 
             if (!groups[capitalizedMonthYear]) groups[capitalizedMonthYear] = {};
             if (!groups[capitalizedMonthYear][week]) {
@@ -162,9 +164,6 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
                                                 <div>
                                                     <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-indigo-400 transition-colors">{week}</h4>
                                                     <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5 font-medium">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {formatDate(weekData.firstDate)} - {formatDate(weekData.lastDate)}
-                                                        <span className="text-zinc-700 mx-0.5">•</span>
                                                         <Activity className="w-3 h-3" />
                                                         {weekData.count} entreno{weekData.count !== 1 ? 's' : ''}
                                                     </p>
@@ -196,15 +195,10 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
                                                                             <span>{formatDate(workout.fecha)}</span>
                                                                         </div>
 
-                                                                        {isClass ? (
+                                                                        {isClass && (
                                                                             <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
                                                                                 <Clock className="w-3.5 h-3.5" />
                                                                                 <span>{formatDuration(workout.duracion_horas || 0)}</span>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${AccentBadgeBg}`}>
-                                                                                <Dumbbell className="w-3.5 h-3.5" />
-                                                                                <span>{calculateVolume(workout.ejercicios)} kg</span>
                                                                             </div>
                                                                         )}
                                                                     </div>

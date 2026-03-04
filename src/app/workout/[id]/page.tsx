@@ -12,16 +12,30 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
         return notFound();
     }
 
-    const formatDate = (dateString: Date) => {
-        return new Intl.DateTimeFormat('es-AR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(new Date(dateString));
-    };
+    const dateObj = new Date(workout.fecha);
+
+    // Format just the date part (e.g., "lunes, 3 de marzo de 2026")
+    const dateStr = new Intl.DateTimeFormat('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    }).format(dateObj);
+
+    // Format times
+    const formatTime = (d: Date) => new Intl.DateTimeFormat('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(d);
+
+    const endTimeStr = formatTime(dateObj);
+
+    let timeRangeStr = endTimeStr;
+    if (workout.duracion_horas) {
+        const startTimeObj = new Date(dateObj.getTime() - workout.duracion_horas * 3600 * 1000);
+        const startTimeStr = formatTime(startTimeObj);
+        timeRangeStr = `${startTimeStr} - ${endTimeStr}`;
+    }
 
     return (
         <main className="min-h-screen pb-24 max-w-md mx-auto flex flex-col pt-16">
@@ -43,8 +57,12 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
             {/* Content */}
             <div className="flex-1 px-4 py-6">
                 <div className="flex items-center gap-2 text-zinc-400 mb-8 bg-zinc-900 border border-zinc-800 rounded-xl p-3">
-                    <Calendar className="w-5 h-5 text-indigo-400" />
-                    <span className="text-sm capitalize">{formatDate(workout.fecha)}</span>
+                    <Calendar className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <span className="text-sm">
+                        <span className="capitalize">{dateStr}</span>
+                        <span className="mx-2 text-zinc-600">•</span>
+                        <span className="font-medium text-zinc-300">{timeRangeStr}</span>
+                    </span>
                 </div>
 
                 {workout.ejercicios.map((exercise, exIndex) => (

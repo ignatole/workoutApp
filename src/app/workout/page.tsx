@@ -74,6 +74,7 @@ export default function WorkoutSession() {
         try {
             const payload = {
                 nombre_rutina: routineName,
+                duracion_horas: seconds / 3600,
                 ejercicios: exercises.map(ex => ({
                     nombre: ex.nombre,
                     comentario_ejercicio: ex.comentario_ejercicio,
