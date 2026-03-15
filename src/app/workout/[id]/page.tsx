@@ -4,6 +4,17 @@ import { ChevronLeft, Calendar } from "lucide-react";
 import { notFound } from "next/navigation";
 import { DeleteWorkoutButton } from "@/features/workouts/components/delete-workout-button";
 
+const parseWorkoutDate = (dateVal: string | Date) => {
+    if (!dateVal) return new Date();
+    const d = new Date(dateVal);
+    const dateStr = typeof dateVal === 'string' ? dateVal : d.toISOString();
+
+    if (dateStr.includes('T00:00:00.000Z') || dateStr.includes('T00:00:00.000+00:00')) {
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+    }
+    return d;
+};
+
 export default async function WorkoutDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const workout = await getWorkoutById(id);
@@ -12,7 +23,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
         return notFound();
     }
 
-    const dateObj = new Date(workout.fecha);
+    const dateObj = parseWorkoutDate(workout.fecha);
 
     // Format just the date part (e.g., "lunes, 3 de marzo de 2026")
     const dateStr = new Intl.DateTimeFormat('es-AR', {

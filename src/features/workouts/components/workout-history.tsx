@@ -1,11 +1,26 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, ChevronDown, ChevronUp, X, Save, Trash2, Calendar, Clock, Activity, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { updateWorkoutComment, deleteWorkout } from "../actions/workout-actions";
+
+// Helper para parsear la fecha. Cuando un entrenamiento es importado o creado manualmente 
+// en MongoDB sin hora (solo T00:00:00.000Z), debemos tratarlo como si fuera mediodía en la timezone local, 
+// o de lo contrario el navegador en Argentina (-3) lo restará a las 21:00 del día anterior (ej: lunes a domingo).
+const parseWorkoutDate = (dateVal: string | Date) => {
+    if (!dateVal) return new Date();
+    const d = new Date(dateVal);
+    const dateStr = typeof dateVal === 'string' ? dateVal : d.toISOString();
+
+    // Si la fecha original era a la hora cero universal, la forzamos a ser ese mismo día pero local.
+    if (dateStr.includes('T00:00:00.000Z') || dateStr.includes('T00:00:00.000+00:00')) {
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+    }
+    return d;
+};
 
 // Helper to get the week range (Monday to Sunday)
 const getWeekRange = (date: Date) => {
@@ -23,7 +38,7 @@ const getWeekRange = (date: Date) => {
 };
 
 const formatDate = (dateString: string | Date) => {
-    const date = new Date(dateString);
+    const date = parseWorkoutDate(dateString);
     const dateStr = `${date.getDate()}/${date.getMonth() + 1}`;
 
     let weekdayStr = new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(date);
@@ -42,6 +57,12 @@ const formatDuration = (hours: number) => {
 };
 
 export function WorkoutHistory({ workouts }: { workouts: any[] }) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     // Keep track of which months and weeks are collapsed. True = collapsed.
     const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>({});
     const [collapsedWeeks, setCollapsedWeeks] = useState<Record<string, boolean>>({});
@@ -100,7 +121,7 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
         }>> = {};
 
         workouts.forEach((workout) => {
-            const date = new Date(workout.fecha);
+            const date = parseWorkoutDate(workout.fecha);
             const monthYear = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(date);
             const capitalizedMonthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
 
@@ -128,6 +149,10 @@ export function WorkoutHistory({ workouts }: { workouts: any[] }) {
 
         return groups;
     }, [workouts]);
+
+    if (!isMounted) {
+        return <div className="space-y-6 opacity-0 animate-pulse h-96"></div>;
+    }
 
     return (
         <div className="space-y-6">
